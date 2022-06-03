@@ -8,6 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System;
+using System.Diagnostics;
 
 namespace EarthSystem
 {
@@ -15,15 +17,18 @@ namespace EarthSystem
     {
         
         public static Camera camera;
-        //private int _vertexBufferObject;
+
+        private Stopwatch timer;
+
         private bool _firstMove = true;
         private Vector2 _lastPos;
-        //private bool textFramePaint = false;
 
-        //private Vector3 carPosition = new Vector3(0, 0, 0);
-        //private Vector3 textFramePosition = new Vector3(0, 0, 0);
-        //Car car;
         Planet Earth;
+        Sputnik Moon;
+
+        private Vector3 earthPosition = new Vector3(0f, 0f, 0f);
+        private Vector3 moonPosition = new Vector3(0f, 10f, 0f);
+
         public Program()
             : base(800, 600, GraphicsMode.Default, "MoonSurface")
         {
@@ -45,11 +50,17 @@ namespace EarthSystem
 
         protected override void OnLoad(EventArgs e)
         {
+            timer = new Stopwatch();
+            timer.Start();
+
+            GL.Enable(EnableCap.DepthTest);
+            GL.DepthFunc(DepthFunction.Less);
             //GL.Enable(EnableCap.DepthTest);
             //GL.DepthFunc(DepthFunction.Less);
             //_vertexBufferObject = GL.GenBuffer();
             //GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
-            GL.ClearColor(0.101f, 0.98f, 1.0f, 1.0f);
+            //GL.ClearColor(0.101f, 0.98f, 1.0f, 1.0f);
+            GL.ClearColor(0.254f, 0.290f, 0.298f, 1.0f);
             //GL.ClearColor(0f, 0f, 1f,1f);
             //GL.Enable(EnableCap.DepthTest);
 
@@ -57,10 +68,14 @@ namespace EarthSystem
             
 
             //terrain = new Terrain(new FileInfo("./Resources/moon_surface.png"));//сама картинка
-            camera = new Camera(new Vector3(0, 100, 0), Width / (float)Height);//положение камеры начальное
+            camera = new Camera(new Vector3(0, 10, 0), Width / (float)Height);//положение камеры начальное
             ////textFrame = new TextFrame();
             //car = new Car();
             Earth = new Planet();
+            Moon = new Sputnik();
+
+            Earth.load();
+            Moon.load();
             //
             CursorVisible = false;
             //
@@ -72,19 +87,25 @@ namespace EarthSystem
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
+            double timeValue=timer.Elapsed.TotalSeconds;
+
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             //textFrame.load();
             //car.load();
             //terrain.load();
-            Earth.load();
+           
 
             //textFrame = new TextFrame();
 
-            var transform = Matrix4.Identity;
+            var transform1 = Matrix4.Identity * Matrix4.CreateTranslation(earthPosition);
+            var transform2 = Matrix4.Identity * Matrix4.CreateRotationZ((float)timeValue) * Matrix4.CreateTranslation(moonPosition);
             //var transform1 = transform;
             //var transform2 = transform;
-            Earth.render(e, transform);
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            Earth.render(e, transform1);
+            //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+            Moon.render(e, transform2);
             //carPosition.Y = terrain.returnHeightOnTriangle(new Vector2(carPosition.X, carPosition.Z));
             //transform1 *= Matrix4.CreateTranslation(carPosition);
             //transform1 *= Matrix4.CreateRotationZ(camera.return_pitch());
@@ -123,7 +144,7 @@ namespace EarthSystem
                 Exit();
             }
 
-            const float cameraSpeed = 50f;
+            const float cameraSpeed = 10f;
             const float sensitivity = 0.2f;
 
             if (input.IsKeyDown(Key.W))
@@ -197,6 +218,7 @@ namespace EarthSystem
             GL.BindVertexArray(0);
             GL.UseProgram(0);
             Earth.destroy(e);
+            Moon.destroy(e);
             //car.destroy(e);
             //GL.DeleteBuffer(_vertexBufferObject);
             base.OnUnload(e);

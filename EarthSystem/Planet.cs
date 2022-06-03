@@ -40,8 +40,8 @@ namespace EarthSystem
 
         public void load()
         {
-            GL.Enable(EnableCap.DepthTest);
-            GL.DepthFunc(DepthFunction.Less);
+            //GL.Enable(EnableCap.DepthTest);
+            //GL.DepthFunc(DepthFunction.Less);
             //GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
             planetShader.Use();
             GL.GenVertexArrays(1, out vaoPlanet);
@@ -60,12 +60,11 @@ namespace EarthSystem
             //_frameshader.SetMatrix4("model", model);
 
             planetShader.Use();
-
             planetShader.SetMatrix4("view", Program.camera.GetViewMatrix());
             planetShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
-            planetShader.SetVector3("objectColor", new Vector3(0.0f, 1.0f, 0.0f));
-
+            planetShader.SetVector3("objectColor", new Vector3(0.313f, 0.784f, 0.470f));
             planetShader.SetMatrix4("model", model);
+            //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);//закрашивать или оставить каркас
             GL.BindVertexArray(vaoPlanet);
             GL.DrawArrays(PrimitiveType.Triangles, 0, planet.Length);
         }
