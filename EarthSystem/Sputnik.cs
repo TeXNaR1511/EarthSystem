@@ -37,6 +37,8 @@ namespace EarthSystem
         private float sputnikWidth = 1;
         private float sputnikHeight = 1;
 
+        private float limitAngle = 45;
+
         public Sputnik()
         {
             sputnik = new float[]
@@ -130,24 +132,6 @@ namespace EarthSystem
         {
             //_frameshader.SetMatrix4("model", model);
 
-            sputnikShader.Use();
-            sputnikShader.SetMatrix4("view", Program.camera.GetViewMatrix());
-            sputnikShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
-            sputnikShader.SetVector3("objectColor", new Vector3(1f, 1f, 1f));
-            sputnikShader.SetMatrix4("model", model);
-            GL.BindVertexArray(vaoSputnik);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, sputnik.Length);
-            //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);//закрашивать или оставить каркас
-            //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-
-            cameraShader.Use();
-            cameraShader.SetMatrix4("view", Program.camera.GetViewMatrix());
-            cameraShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
-            cameraShader.SetVector3("objectColor", new Vector3(0f, 0f, 1f));
-            cameraShader.SetMatrix4("model", model);
-            GL.BindVertexArray(vaoCamera);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, camera.Length);
-
             xaxisShader.Use();
             xaxisShader.SetMatrix4("view", Program.camera.GetViewMatrix());
             xaxisShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
@@ -163,6 +147,25 @@ namespace EarthSystem
             yaxisShader.SetMatrix4("model", model);
             GL.BindVertexArray(vaoYaxis);
             GL.DrawArrays(PrimitiveType.Triangles, 0, yaxis.Length);
+
+            cameraShader.Use();
+            cameraShader.SetMatrix4("view", Program.camera.GetViewMatrix());
+            cameraShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
+            cameraShader.SetVector3("objectColor", new Vector3(0f, 0f, 1f));
+            cameraShader.SetMatrix4("model", model);
+            GL.BindVertexArray(vaoCamera);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, camera.Length);
+
+            sputnikShader.Use();
+            sputnikShader.SetMatrix4("view", Program.camera.GetViewMatrix());
+            sputnikShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
+            sputnikShader.SetVector3("objectColor", new Vector3(1f, 1f, 1f));
+            sputnikShader.SetMatrix4("model", model);
+            GL.BindVertexArray(vaoSputnik);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, sputnik.Length);
+            //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);//закрашивать или оставить каркас
+            //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+
         }
 
         public void destroy(EventArgs e)
@@ -171,6 +174,24 @@ namespace EarthSystem
             GL.DeleteProgram(cameraShader.Handle);
             GL.DeleteProgram(xaxisShader.Handle);
             GL.DeleteProgram(yaxisShader.Handle);
+        }
+
+        public Vector3 returnCameraPos()
+        {
+            return new Vector3(0, sputnikWidth, 0);
+        }
+
+        public int numberVisibleSputnik(Vector3[] Sputniks,Vector3 SPos,Vector3 CamPos)
+        {
+            int result = 0;
+            for(int i=0;i<Sputniks.Length;i++)
+            {
+                if(Sputniks[i] != SPos && MathHelper.RadiansToDegrees(Math.Acos(Vector3.Dot(CamPos - SPos, Sputniks[i] - CamPos) / ((CamPos - SPos).Length * (Sputniks[i]-CamPos).Length)))<=limitAngle)
+                {
+                    result++;
+                }
+            }
+            return result;
         }
 
     }

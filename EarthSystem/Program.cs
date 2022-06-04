@@ -25,9 +25,13 @@ namespace EarthSystem
 
         Planet Earth;
         Sputnik Moon;
+        Sputnik SC1;
+        Sputnik SC2;
 
         private Vector3 earthPosition = new Vector3(0f, 0f, 0f);
         private Vector3 moonPosition = new Vector3(0f, 10f, 0f);
+        private Vector3 SC1Position = new Vector3(0f, 10f, 10f);
+        private Vector3 SC2Position = new Vector3(0f, 20f, 10f);
 
         public Program()
             : base(800, 600, GraphicsMode.Default, "MoonSurface")
@@ -68,15 +72,19 @@ namespace EarthSystem
             
 
             //terrain = new Terrain(new FileInfo("./Resources/moon_surface.png"));//сама картинка
-            camera = new Camera(new Vector3(0, 10, 0), Width / (float)Height);//положение камеры начальное
+            camera = new Camera(new Vector3(20, 20, 20), Width / (float)Height);//положение камеры начальное
             ////textFrame = new TextFrame();
             //car = new Car();
             Earth = new Planet();
             Moon = new Sputnik();
+            SC1 = new Sputnik();
+            SC2 = new Sputnik();
 
             Earth.load();
             Moon.load();
-            //
+            SC1.load();
+            SC2.load();
+            
             CursorVisible = false;
             //
             //carPosition.X = terrain.returnInitialCoord().X;
@@ -87,25 +95,56 @@ namespace EarthSystem
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            double timeValue=timer.Elapsed.TotalSeconds;
+            double timeValue = timer.Elapsed.TotalSeconds;
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             //textFrame.load();
             //car.load();
             //terrain.load();
-           
+
+            /*короче вывод такой, вот если у тебя есть точка ты ты хочешь узнать координаты
+            после преобразования тогда надо умножить эту точку на ту же матрицу*/
+            /*нужно давать изначальную точку*/
+
+            //типо вот так
+            /*Console.WriteLine(moonPosition+Moon.returnCameraPos());
+            Console.WriteLine(new Vector4(moonPosition+Moon.returnCameraPos(), 1) * Matrix4.CreateRotationX((float)timeValue / 2));*/
 
             //textFrame = new TextFrame();
 
-            var transform1 = Matrix4.Identity * Matrix4.CreateTranslation(earthPosition);
-            var transform2 = Matrix4.Identity * Matrix4.CreateRotationZ((float)timeValue) * Matrix4.CreateTranslation(moonPosition);
+            //var transform1 = Matrix4.Identity * Matrix4.CreateTranslation(earthPosition);
+            //var transform2 = Matrix4.Identity * Matrix4.CreateRotationZ((float)timeValue) * Matrix4.CreateTranslation(moonPosition);
             //var transform1 = transform;
             //var transform2 = transform;
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            Earth.render(e, transform1);
+            //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+
+            var earthTransform = Matrix4.Identity * Matrix4.CreateTranslation(earthPosition);
+            var moonTransform = Matrix4.Identity * Matrix4.CreateRotationX((float)timeValue / 2) * Matrix4.CreateTranslation(moonPosition);
+            var SC1Transform = Matrix4.Identity * Matrix4.CreateRotationZ((float)timeValue / 4) * Matrix4.CreateTranslation(SC1Position);
+            var SC2Transform = Matrix4.Identity * Matrix4.CreateRotationX((float)timeValue / 3) * Matrix4.CreateTranslation(SC2Position);
+
             //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-            Moon.render(e, transform2);
+
+            Earth.render(e, earthTransform);
+            Moon.render(e, moonTransform);
+            SC1.render(e, SC1Transform );
+            SC2.render(e, SC2Transform);
+
+            Vector3[] allSPos = new Vector3[] { (new Vector4(0, 0, 0, 1) * moonTransform).Xyz, (new Vector4(0, 0, 0, 1) * SC1Transform).Xyz, (new Vector4(0, 0, 0, 1) * SC2Transform).Xyz };
+            //Console.WriteLine((new Vector4(moonPosition, 1) * moonTransform).Xyz + " " + (new Vector4(SC1Position, 1) * SC1Transform).Xyz + " " + (new Vector4(SC2Position, 1) * SC2Transform).Xyz + " " + (new Vector4(moonPosition + Moon.returnCameraPos(), 1) * moonTransform).Xyz);
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine("Number of visible sputniks from Moon is " + Moon.numberVisibleSputnik(allSPos, (new Vector4(0, 0, 0, 1) * moonTransform).Xyz, (new Vector4(Moon.returnCameraPos(), 1) * moonTransform).Xyz));
+            Console.WriteLine("Number of visible sputniks from SC1 is " + Moon.numberVisibleSputnik(allSPos, (new Vector4(0, 0, 0, 1) * SC1Transform).Xyz, (new Vector4(SC1.returnCameraPos(), 1) * SC1Transform).Xyz));
+            Console.WriteLine("Number of visible sputniks from SC2 is " + Moon.numberVisibleSputnik(allSPos, (new Vector4(0, 0, 0, 1) * SC2Transform).Xyz, (new Vector4(SC2.returnCameraPos(), 1) * SC2Transform).Xyz));
+            //Console.Clear();
+            //Vector4 exp = new Vector4(moonPosition, 1);
+
+            //Console.WriteLine(moonPosition+Moon.returnCameraPos());
+            //Console.WriteLine((new Vector4(Moon.returnCameraPos(), 1) * moonTransform).Xyz);
+
+            //Console.WriteLine(moonPosition + Moon.returnCameraPos());
+            //Console.WriteLine((Matrix4.Identity * Matrix4.CreateRotationY((float)timeValue / 2) * Matrix4.CreateTranslation(moonPosition+Moon.returnCameraPos())));
             //carPosition.Y = terrain.returnHeightOnTriangle(new Vector2(carPosition.X, carPosition.Z));
             //transform1 *= Matrix4.CreateTranslation(carPosition);
             //transform1 *= Matrix4.CreateRotationZ(camera.return_pitch());
@@ -219,6 +258,8 @@ namespace EarthSystem
             GL.UseProgram(0);
             Earth.destroy(e);
             Moon.destroy(e);
+            SC1.destroy(e);
+            SC2.destroy(e);
             //car.destroy(e);
             //GL.DeleteBuffer(_vertexBufferObject);
             base.OnUnload(e);

@@ -18,9 +18,9 @@ namespace EarthSystem
         private int vaoPlanet;
         private int planetBufferObject;
 
-        private float planetLenght = 10;
-        private float planetWidth = 10;
-        private float planetHeight = 10;
+        private float planetLenght = 5;
+        private float planetWidth = 5;
+        private float planetHeight = 5;
 
         public Planet()
         {
