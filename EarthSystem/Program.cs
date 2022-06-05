@@ -10,12 +10,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System;
 using System.Diagnostics;
+using Zeptomoby.OrbitTools;
 
 namespace EarthSystem
 {
     class Program : GameWindow
     {
-        
+        private const int coordScale = 1;
+
         public static Camera camera;
 
         private Stopwatch timer;
@@ -23,18 +25,26 @@ namespace EarthSystem
         private bool _firstMove = true;
         private Vector2 _lastPos;
 
+        private List<Satellite> AllSat = new List<Satellite> { };
+        private List<Sputnik> AllSputniks = new List<Sputnik> { };
+        private List<Vector3> AllCoord = new List<Vector3> { };
+
+        private string firstTleStr;
+        private string secondTleStr;
+        private string thirdTleStr;
+
         Planet Earth;
-        Sputnik Moon;
-        Sputnik SC1;
-        Sputnik SC2;
+        //Sputnik Moon;
+        //Sputnik SC1;
+        //Sputnik SC2;
 
         private Vector3 earthPosition = new Vector3(0f, 0f, 0f);
-        private Vector3 moonPosition = new Vector3(0f, 10f, 0f);
-        private Vector3 SC1Position = new Vector3(0f, 10f, 10f);
-        private Vector3 SC2Position = new Vector3(0f, 20f, 10f);
+        //private Vector3 moonPosition = new Vector3(0f, 10f, 0f);
+        //private Vector3 SC1Position = new Vector3(0f, 10f, 10f);
+        //private Vector3 SC2Position = new Vector3(0f, 20f, 10f);
 
         public Program()
-            : base(800, 600, GraphicsMode.Default, "MoonSurface")
+            : base(800, 600, GraphicsMode.Default, "EarthSystem")
         {
             WindowState = WindowState.Maximized;//формат окна
         }
@@ -46,14 +56,54 @@ namespace EarthSystem
             {
                 program.Run();
             }
+            //string str1 = "SGP4 Test";
+            //string str2 = "1 88888U          80275.98708465  .00073094  13844-3  66816-4 0     8";
+            //string str3 = "2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518   105";
+
+            //Tle tle1 = new Tle(str1, str2, str3);
+
+            //PrintPosVel(tle1);
+
+            //Console.WriteLine();
             //Console.WriteLine()
             //Console.WriteLine(MathHelper.RadiansToDegrees(Math.Acos(0.8)) + " " + MathHelper.RadiansToDegrees(Math.Acos(-0.5)));
         }
 
-        
+        static Vector3 returnSatPos(Satellite sat, double time)
+        {
+            Eci eci = sat.PositionEci(time);
+            return new Vector3((float)eci.Position.X, (float)eci.Position.Y, (float)eci.Position.Z) / coordScale;
+        }
 
         protected override void OnLoad(EventArgs e)
         {
+            string line = " ";
+            StreamReader sr = new StreamReader("./Resources/Sputniks.txt");
+            
+            int lineCount = 0;
+
+            while (line != null)
+            {
+                
+                line = sr.ReadLine();
+                if (line == null) break;
+
+                if (lineCount % 3 == 0) firstTleStr = line;
+                if (lineCount % 3 == 1) secondTleStr = line;
+                if (lineCount % 3 == 2)
+                {
+                    thirdTleStr = line;
+                    AllSat.Add(new Satellite(new Tle(firstTleStr, secondTleStr, thirdTleStr)));
+                }
+
+                //Console.WriteLine(line + " " + lineCount);
+                lineCount++;
+                
+            }
+            //Console.WriteLine(AllSat.Count);
+
+            sr.Close();
+
             timer = new Stopwatch();
             timer.Start();
 
@@ -72,18 +122,25 @@ namespace EarthSystem
             
 
             //terrain = new Terrain(new FileInfo("./Resources/moon_surface.png"));//сама картинка
-            camera = new Camera(new Vector3(20, 20, 20), Width / (float)Height);//положение камеры начальное
+            camera = new Camera(new Vector3(20000, 20000, 20000), Width / (float)Height);//положение камеры начальное
             ////textFrame = new TextFrame();
             //car = new Car();
             Earth = new Planet();
-            Moon = new Sputnik();
-            SC1 = new Sputnik();
-            SC2 = new Sputnik();
+            //Moon = new Sputnik();
+            //SC1 = new Sputnik();
+            //SC2 = new Sputnik();
 
             Earth.load();
-            Moon.load();
-            SC1.load();
-            SC2.load();
+            //Moon.load();
+            //SC1.load();
+            //SC2.load();
+
+            for (int i = 0; i < AllSat.Count; i++)
+            {
+                AllSputniks.Add(new Sputnik(returnSatPos(AllSat[i], 0)));
+                AllSputniks[i].load();
+                AllCoord.Add(AllSputniks[i].returnRealPos());
+            }
             
             CursorVisible = false;
             //
@@ -96,6 +153,7 @@ namespace EarthSystem
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             double timeValue = timer.Elapsed.TotalSeconds;
+            //Console.WriteLine(timeValue);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
@@ -109,7 +167,7 @@ namespace EarthSystem
 
             //типо вот так
             /*Console.WriteLine(moonPosition+Moon.returnCameraPos());
-            Console.WriteLine(new Vector4(moonPosition+Moon.returnCameraPos(), 1) * Matrix4.CreateRotationX((float)timeValue / 2));*/
+            Console.WriteLine(new Vector4((0,0,0)+Moon.returnCameraPos(), 1) * Matrix4.CreateRotationX((float)timeValue / 2));*/
 
             //textFrame = new TextFrame();
 
@@ -120,23 +178,35 @@ namespace EarthSystem
             //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
             var earthTransform = Matrix4.Identity * Matrix4.CreateTranslation(earthPosition);
-            var moonTransform = Matrix4.Identity * Matrix4.CreateRotationX((float)timeValue / 2) * Matrix4.CreateTranslation(moonPosition);
-            var SC1Transform = Matrix4.Identity * Matrix4.CreateRotationZ((float)timeValue / 4) * Matrix4.CreateTranslation(SC1Position);
-            var SC2Transform = Matrix4.Identity * Matrix4.CreateRotationX((float)timeValue / 3) * Matrix4.CreateTranslation(SC2Position);
+            //var moonTransform = Matrix4.Identity * Matrix4.CreateRotationX((float)timeValue / 2) * Matrix4.CreateTranslation(moonPosition);
+            //var SC1Transform = Matrix4.Identity * Matrix4.CreateRotationZ((float)timeValue / 4) * Matrix4.CreateTranslation(SC1Position);
+            //var SC2Transform = Matrix4.Identity * Matrix4.CreateRotationX((float)timeValue / 3) * Matrix4.CreateTranslation(SC2Position);
 
             //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-
+            //GL.Frustum(100, 100, 100, 100, 100, -1000000000000);
             Earth.render(e, earthTransform);
-            Moon.render(e, moonTransform);
-            SC1.render(e, SC1Transform );
-            SC2.render(e, SC2Transform);
-
-            Vector3[] allSPos = new Vector3[] { (new Vector4(0, 0, 0, 1) * moonTransform).Xyz, (new Vector4(0, 0, 0, 1) * SC1Transform).Xyz, (new Vector4(0, 0, 0, 1) * SC2Transform).Xyz };
-            //Console.WriteLine((new Vector4(moonPosition, 1) * moonTransform).Xyz + " " + (new Vector4(SC1Position, 1) * SC1Transform).Xyz + " " + (new Vector4(SC2Position, 1) * SC2Transform).Xyz + " " + (new Vector4(moonPosition + Moon.returnCameraPos(), 1) * moonTransform).Xyz);
+            //Moon.render(e, moonTransform);
+            //SC1.render(e, SC1Transform );
+            //SC2.render(e, SC2Transform);
+            var allTransform = Matrix4.Identity;
             Console.SetCursorPosition(0, 0);
-            Console.WriteLine("Number of visible sputniks from Moon is " + Moon.numberVisibleSputnik(allSPos, (new Vector4(0, 0, 0, 1) * moonTransform).Xyz, (new Vector4(Moon.returnCameraPos(), 1) * moonTransform).Xyz));
-            Console.WriteLine("Number of visible sputniks from SC1 is " + Moon.numberVisibleSputnik(allSPos, (new Vector4(0, 0, 0, 1) * SC1Transform).Xyz, (new Vector4(SC1.returnCameraPos(), 1) * SC1Transform).Xyz));
-            Console.WriteLine("Number of visible sputniks from SC2 is " + Moon.numberVisibleSputnik(allSPos, (new Vector4(0, 0, 0, 1) * SC2Transform).Xyz, (new Vector4(SC2.returnCameraPos(), 1) * SC2Transform).Xyz));
+            for (int i=0;i<AllSputniks.Count;i++)
+            {
+                AllSputniks[i].assignRealPosition(returnSatPos(AllSat[i], timeValue));
+                allTransform = Matrix4.Identity * Matrix4.CreateRotationX((float)timeValue) * Matrix4.CreateTranslation(AllSputniks[i].returnRealPos());
+                AllSputniks[i].render(e, allTransform);
+                AllCoord[i] = AllSputniks[i].returnRealPos();
+                Console.WriteLine("Number of visible satellites from " + AllSat[i].Name.Trim() + " is (" + AllSputniks[i].numberVisibleSputnik(AllCoord, AllCoord[i], (new Vector4(AllSputniks[i].returnCameraPos(), 1) * allTransform).Xyz)+")");
+            }
+            //Console.Clear();
+            //Vector3[] allSPos = new Vector3[] { (new Vector4(0, 0, 0, 1) * moonTransform).Xyz, (new Vector4(0, 0, 0, 1) * SC1Transform).Xyz, (new Vector4(0, 0, 0, 1) * SC2Transform).Xyz };
+            //Console.WriteLine((new Vector4(moonPosition, 1) * moonTransform).Xyz + " " + (new Vector4(SC1Position, 1) * SC1Transform).Xyz + " " + (new Vector4(SC2Position, 1) * SC2Transform).Xyz + " " + (new Vector4(moonPosition + Moon.returnCameraPos(), 1) * moonTransform).Xyz);
+            
+            //Console.SetCursorPosition(0, 0);
+            //Console.WriteLine("Number of visible sputniks from Moon is " + Moon.numberVisibleSputnik(allSPos, (new Vector4(0, 0, 0, 1) * moonTransform).Xyz, (new Vector4(Moon.returnCameraPos(), 1) * moonTransform).Xyz));
+            //Console.WriteLine("Number of visible sputniks from SC1 is " + Moon.numberVisibleSputnik(allSPos, (new Vector4(0, 0, 0, 1) * SC1Transform).Xyz, (new Vector4(SC1.returnCameraPos(), 1) * SC1Transform).Xyz));
+            //Console.WriteLine("Number of visible sputniks from SC2 is " + Moon.numberVisibleSputnik(allSPos, (new Vector4(0, 0, 0, 1) * SC2Transform).Xyz, (new Vector4(SC2.returnCameraPos(), 1) * SC2Transform).Xyz));
+            
             //Console.Clear();
             //Vector4 exp = new Vector4(moonPosition, 1);
 
@@ -183,7 +253,7 @@ namespace EarthSystem
                 Exit();
             }
 
-            const float cameraSpeed = 10f;
+            const float cameraSpeed = 10000f;
             const float sensitivity = 0.2f;
 
             if (input.IsKeyDown(Key.W))
@@ -257,9 +327,13 @@ namespace EarthSystem
             GL.BindVertexArray(0);
             GL.UseProgram(0);
             Earth.destroy(e);
-            Moon.destroy(e);
-            SC1.destroy(e);
-            SC2.destroy(e);
+            for(int i=0;i<AllSputniks.Count;i++)
+            {
+                AllSputniks[i].destroy(e);
+            }
+            //Moon.destroy(e);
+            //SC1.destroy(e);
+            //SC2.destroy(e);
             //car.destroy(e);
             //GL.DeleteBuffer(_vertexBufferObject);
             base.OnUnload(e);

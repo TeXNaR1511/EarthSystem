@@ -100,8 +100,7 @@ namespace EarthSystem
         
         public Matrix4 GetProjectionMatrix()
         {
-            return Matrix4.CreatePerspectiveFieldOfView(_fov, AspectRatio, 0.01f, 500f);
-            
+            return Matrix4.CreatePerspectiveFieldOfView(_fov, AspectRatio, 10f, 100000f);
         }
 
         private void UpdateVectors()

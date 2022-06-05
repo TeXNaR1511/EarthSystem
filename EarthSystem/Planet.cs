@@ -18,9 +18,9 @@ namespace EarthSystem
         private int vaoPlanet;
         private int planetBufferObject;
 
-        private float planetLenght = 5;
-        private float planetWidth = 5;
-        private float planetHeight = 5;
+        private float planetLenght = 5000;
+        private float planetWidth = 5000;
+        private float planetHeight = 5000;
 
         public Planet()
         {
@@ -62,7 +62,7 @@ namespace EarthSystem
             planetShader.Use();
             planetShader.SetMatrix4("view", Program.camera.GetViewMatrix());
             planetShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
-            planetShader.SetVector3("objectColor", new Vector3(0.313f, 0.784f, 0.470f));
+            planetShader.SetVector3("objectColor", new Vector3(0.160f, 1f, 0.572f));
             planetShader.SetMatrix4("model", model);
             //GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);//закрашивать или оставить каркас
             GL.BindVertexArray(vaoPlanet);

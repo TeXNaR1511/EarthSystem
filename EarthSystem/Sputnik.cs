@@ -13,6 +13,8 @@ namespace EarthSystem
 {
     class Sputnik
     {
+        private Vector3 realPosition;
+
         private readonly float[] sputnik;
         private readonly float[] camera;
         private readonly float[] xaxis;
@@ -33,13 +35,13 @@ namespace EarthSystem
         private int xaxisBufferObject;
         private int yaxisBufferObject;
 
-        private float sputnikLenght = 1;
-        private float sputnikWidth = 1;
-        private float sputnikHeight = 1;
+        private float sputnikLenght = 200;
+        private float sputnikWidth = 200;
+        private float sputnikHeight = 200;
 
-        private float limitAngle = 45;
+        private float limitAngle = 45;//предельный угол зрения камеры спутника
 
-        public Sputnik()
+        public Sputnik(Vector3 realPosition)
         {
             sputnik = new float[]
             {   
@@ -84,6 +86,8 @@ namespace EarthSystem
             cameraShader = new Shader("./Shaders/shader.vert", "./Shaders/shader.frag");
             xaxisShader = new Shader("./Shaders/shader.vert", "./Shaders/shader.frag");
             yaxisShader = new Shader("./Shaders/shader.vert", "./Shaders/shader.frag");
+
+            this.realPosition = realPosition;
         }
 
         public void load()
@@ -181,10 +185,20 @@ namespace EarthSystem
             return new Vector3(0, sputnikWidth, 0);
         }
 
-        public int numberVisibleSputnik(Vector3[] Sputniks,Vector3 SPos,Vector3 CamPos)
+        public Vector3 returnRealPos()
+        {
+            return realPosition;
+        }
+
+        public void assignRealPosition(Vector3 realPosition)
+        {
+            this.realPosition = realPosition;
+        }
+
+        public int numberVisibleSputnik(List<Vector3> Sputniks,Vector3 SPos,Vector3 CamPos)
         {
             int result = 0;
-            for(int i=0;i<Sputniks.Length;i++)
+            for(int i=0;i<Sputniks.Count;i++)
             {
                 if(Sputniks[i] != SPos && MathHelper.RadiansToDegrees(Math.Acos(Vector3.Dot(CamPos - SPos, Sputniks[i] - CamPos) / ((CamPos - SPos).Length * (Sputniks[i]-CamPos).Length)))<=limitAngle)
                 {
