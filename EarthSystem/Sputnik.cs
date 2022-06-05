@@ -14,6 +14,7 @@ namespace EarthSystem
     class Sputnik
     {
         private Vector3 realPosition;
+        private bool isRenderPyramide = false;
 
         private readonly float[] sputnik;
         private readonly float[] camera;
@@ -35,9 +36,9 @@ namespace EarthSystem
         private int xaxisBufferObject;
         private int yaxisBufferObject;
 
-        private float sputnikLenght = 200;
-        private float sputnikWidth = 200;
-        private float sputnikHeight = 200;
+        private float sputnikLenght = 100;
+        private float sputnikWidth = 100;
+        private float sputnikHeight = 100;
 
         private float limitAngle = 45;//предельный угол зрения камеры спутника
 
@@ -47,12 +48,12 @@ namespace EarthSystem
             {   
                 //-carWidth/2 -> 0, carWidth/2 -> carWidth чтобы центр машинки был на плоскости дна
                 //кубик без одной грани - спутник
-                //sputnikLenght/2,-sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2,//front
+                sputnikLenght/2,-sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2,//front убрать
                 -sputnikLenght/2,-sputnikWidth/2,-sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, -sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, -sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2,//back
-                //sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2,//up
+                sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2,//up убрать
                 sputnikLenght/2,-sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, -sputnikLenght/2,-sputnikWidth/2,-sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, -sputnikLenght/2,-sputnikWidth/2,-sputnikHeight/2,//down
                 sputnikLenght/2,-sputnikWidth/2,-sputnikHeight/2, -sputnikLenght/2,-sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,-sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,-sputnikWidth/2,sputnikHeight/2,//left
-                //sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,sputnikHeight/2,//right
+                sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,sputnikHeight/2, -sputnikLenght/2,sputnikWidth/2,-sputnikHeight/2, sputnikLenght/2,sputnikWidth/2,sputnikHeight/2,//right убрать
             };
 
             xaxis = new float[]
@@ -136,29 +137,32 @@ namespace EarthSystem
         {
             //_frameshader.SetMatrix4("model", model);
 
-            xaxisShader.Use();
-            xaxisShader.SetMatrix4("view", Program.camera.GetViewMatrix());
-            xaxisShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
-            xaxisShader.SetVector3("objectColor", new Vector3(1f, 0f, 0f));
-            xaxisShader.SetMatrix4("model", model);
-            GL.BindVertexArray(vaoXaxis);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, xaxis.Length);
+            if(isRenderPyramide)
+            {
+                xaxisShader.Use();
+                xaxisShader.SetMatrix4("view", Program.camera.GetViewMatrix());
+                xaxisShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
+                xaxisShader.SetVector3("objectColor", new Vector3(1f, 0f, 0f));
+                xaxisShader.SetMatrix4("model", model);
+                GL.BindVertexArray(vaoXaxis);
+                GL.DrawArrays(PrimitiveType.Triangles, 0, xaxis.Length);
 
-            yaxisShader.Use();
-            yaxisShader.SetMatrix4("view", Program.camera.GetViewMatrix());
-            yaxisShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
-            yaxisShader.SetVector3("objectColor", new Vector3(0f, 1f, 0f));
-            yaxisShader.SetMatrix4("model", model);
-            GL.BindVertexArray(vaoYaxis);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, yaxis.Length);
+                yaxisShader.Use();
+                yaxisShader.SetMatrix4("view", Program.camera.GetViewMatrix());
+                yaxisShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
+                yaxisShader.SetVector3("objectColor", new Vector3(0f, 1f, 0f));
+                yaxisShader.SetMatrix4("model", model);
+                GL.BindVertexArray(vaoYaxis);
+                GL.DrawArrays(PrimitiveType.Triangles, 0, yaxis.Length);
 
-            cameraShader.Use();
-            cameraShader.SetMatrix4("view", Program.camera.GetViewMatrix());
-            cameraShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
-            cameraShader.SetVector3("objectColor", new Vector3(0f, 0f, 1f));
-            cameraShader.SetMatrix4("model", model);
-            GL.BindVertexArray(vaoCamera);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, camera.Length);
+                cameraShader.Use();
+                cameraShader.SetMatrix4("view", Program.camera.GetViewMatrix());
+                cameraShader.SetMatrix4("projection", Program.camera.GetProjectionMatrix());
+                cameraShader.SetVector3("objectColor", new Vector3(0f, 0f, 1f));
+                cameraShader.SetMatrix4("model", model);
+                GL.BindVertexArray(vaoCamera);
+                GL.DrawArrays(PrimitiveType.Triangles, 0, camera.Length);
+            }
 
             sputnikShader.Use();
             sputnikShader.SetMatrix4("view", Program.camera.GetViewMatrix());
@@ -206,6 +210,11 @@ namespace EarthSystem
                 }
             }
             return result;
+        }
+
+        public void setIsRenderPyramide(bool a)
+        {
+            isRenderPyramide = a;
         }
 
     }

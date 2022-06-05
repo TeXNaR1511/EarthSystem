@@ -77,11 +77,12 @@ namespace EarthSystem
 
         protected override void OnLoad(EventArgs e)
         {
-            string line = " ";
-            StreamReader sr = new StreamReader("./Resources/Sputniks.txt");
+            string file;
+            file = Console.ReadLine();
+            StreamReader sr = new StreamReader("./Resources/"+file);
             
             int lineCount = 0;
-
+            string line = " ";
             while (line != null)
             {
                 
@@ -105,7 +106,7 @@ namespace EarthSystem
             sr.Close();
 
             timer = new Stopwatch();
-            timer.Start();
+            //timer.Start();
 
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Less);
@@ -190,13 +191,13 @@ namespace EarthSystem
             //SC2.render(e, SC2Transform);
             var allTransform = Matrix4.Identity;
             Console.SetCursorPosition(0, 0);
-            for (int i=0;i<AllSputniks.Count;i++)
+            for (int i = 0; i < AllSputniks.Count; i++)
             {
                 AllSputniks[i].assignRealPosition(returnSatPos(AllSat[i], timeValue));
                 allTransform = Matrix4.Identity * Matrix4.CreateRotationX((float)timeValue) * Matrix4.CreateTranslation(AllSputniks[i].returnRealPos());
                 AllSputniks[i].render(e, allTransform);
                 AllCoord[i] = AllSputniks[i].returnRealPos();
-                Console.WriteLine("Number of visible satellites from " + AllSat[i].Name.Trim() + " is (" + AllSputniks[i].numberVisibleSputnik(AllCoord, AllCoord[i], (new Vector4(AllSputniks[i].returnCameraPos(), 1) * allTransform).Xyz)+")");
+                Console.WriteLine("Number of visible satellites from " + AllSat[i].Name.Trim() + " is (" + AllSputniks[i].numberVisibleSputnik(AllCoord, AllCoord[i], (new Vector4(AllSputniks[i].returnCameraPos(), 1) * allTransform).Xyz) + ")");
             }
             //Console.Clear();
             //Vector3[] allSPos = new Vector3[] { (new Vector4(0, 0, 0, 1) * moonTransform).Xyz, (new Vector4(0, 0, 0, 1) * SC1Transform).Xyz, (new Vector4(0, 0, 0, 1) * SC2Transform).Xyz };
@@ -251,6 +252,32 @@ namespace EarthSystem
             if (input.IsKeyDown(Key.Escape))
             {
                 Exit();
+            }
+
+            if (input.IsKeyDown(Key.T))
+            {
+                timer.Start();
+            }
+
+            if (input.IsKeyDown(Key.R))
+            {
+                timer.Stop();
+            }
+
+            if (input.IsKeyDown(Key.F))
+            {
+                for(int i=0;i<AllSputniks.Count;i++)
+                {
+                    AllSputniks[i].setIsRenderPyramide(false);
+                }
+            }
+
+            if (input.IsKeyDown(Key.G))
+            {
+                for (int i = 0; i < AllSputniks.Count; i++)
+                {
+                    AllSputniks[i].setIsRenderPyramide(true);
+                }
             }
 
             const float cameraSpeed = 10000f;
